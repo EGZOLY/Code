@@ -1,0 +1,141 @@
+
+local lp = game:GetService("Players").LocalPlayer
+local chr = lp.Character or lp.CharacterAdded:Wait()
+local hrp = chr:WaitForChild("HumanoidRootPart")
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+
+-- Variables de estado
+local savedPos = nil
+local noclip = false
+local flying = false
+local flyConn
+
+-- Crear GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "EGZOLY"
+gui.ResetOnSpawn = false
+gui.Parent = lp:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 310)
+frame.Position = UDim2.new(0, 10, 0.5, -155)
+frame.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local layout = Instance.new("UIListLayout", frame)
+layout.Padding = UDim.new(0, 5)
+layout.FillDirection = Enum.FillDirection.Vertical
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Botón generador
+local function createButton(txt, func)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -10, 0, 40)
+    btn.Position = UDim2.new(0, 5, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.Text = txt
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 20
+    btn.AutoButtonColor = true
+    btn.MouseButton1Click:Connect(func)
+    btn.Parent = frame
+end
+
+-- Funciones
+
+-- SX - Guardar ubicación
+createButton("SX", function()
+    savedPos = hrp.Position
+    rconsoleprint("[EGZOLY] Posición guardada.\n")
+end)
+
+-- TP - Teletransportar
+createButton("TP", function()
+    if savedPos then
+        hrp.CFrame = CFrame.new(savedPos)
+        rconsoleprint("[EGZOLY] Teletransportado.\n")
+    end
+end)
+
+-- NC - NoClip
+createButton("NC", function()
+    noclip = true
+    rs.Stepped:Connect(function()
+        if noclip and lp.Character then
+            for _, part in pairs(lp.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+    rconsoleprint("[EGZOLY] NoClip activado.\n")
+end)
+
+-- DSNC - Desactivar NoClip
+createButton("DSNC", function()
+    noclip = false
+    for _, part in pairs(lp.Character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+        end
+    end
+    rconsoleprint("[EGZOLY] NoClip desactivado.\n")
+end)
+
+-- FLY - Volar
+createButton("FLY", function()
+    if flying then return end
+    flying = true
+    local bv = Instance.new("BodyVelocity", hrp)
+    bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    bv.Velocity = Vector3.zero
+
+    local bg = Instance.new("BodyGyro", hrp)
+    bg.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+    bg.CFrame = hrp.CFrame
+
+    flyConn = rs.RenderStepped:Connect(function()
+        local dir = Vector3.zero
+        local cam = workspace.CurrentCamera
+
+        if uis:IsKeyDown(Enum.KeyCode.W) then
+            dir += cam.CFrame.LookVector
+        end
+        if uis:IsKeyDown(Enum.KeyCode.S) then
+            dir -= cam.CFrame.LookVector
+        end
+        if uis:IsKeyDown(Enum.KeyCode.A) then
+            dir -= cam.CFrame.RightVector
+        end
+        if uis:IsKeyDown(Enum.KeyCode.D) then
+            dir += cam.CFrame.RightVector
+        end
+        if uis:IsKeyDown(Enum.KeyCode.Space) then
+            dir += Vector3.new(0, 1, 0)
+        end
+        if uis:IsKeyDown(Enum.KeyCode.LeftShift) then
+            dir -= Vector3.new(0, 1, 0)
+        end
+
+        bv.Velocity = dir.Magnitude > 0 and dir.Unit * 60 or Vector3.zero
+        bg.CFrame = cam.CFrame
+    end)
+
+    rconsoleprint("[EGZOLY] Vuelo activado.\n")
+end)
+
+-- NFLY - Detener vuelo
+createButton("NFLY", function()
+    flying = false
+    if flyConn then flyConn:Disconnect() end
+    for _, v in pairs(hrp:GetChildren()) do
+        if v:IsA("BodyVelocity") or v:IsA("BodyGyro") then
+            v:Destroy()
+        end
+    end
+    rconsoleprint("[EGZOLY] Vuelo desactivado.\n")
+end)
