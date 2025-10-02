@@ -1,0 +1,48 @@
+
+-- Variables
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+
+-- Crear ScreenGui
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "RunGui"
+
+-- Crear botón
+local button = Instance.new("TextButton", gui)
+button.Size = UDim2.new(0, 120, 0, 50)
+button.Position = UDim2.new(0.1, 0, 0.7, 0)
+button.Text = "Correr"
+button.BackgroundColor3 = Color3.fromRGB(100, 200, 255) -- celeste
+button.TextScaled = true
+button.Draggable = true
+button.Active = true
+button.BorderSizePixel = 0
+
+-- Hacerlo redondo
+local corner = Instance.new("UICorner", button)
+corner.CornerRadius = UDim.new(1, 0) -- completamente redondo
+
+-- Animación
+local runAnim = Instance.new("Animation")
+runAnim.AnimationId = "rbxassetid://619512153"
+local runTrack = humanoid:LoadAnimation(runAnim)
+
+-- Estado
+local running = false
+local normalSpeed = 16
+
+button.MouseButton1Click:Connect(function()
+    if running then
+        humanoid.WalkSpeed = normalSpeed
+        runTrack:Stop()
+        button.Text = "Correr"
+        running = false
+    else
+        humanoid.WalkSpeed = 45
+        runTrack:Play()
+        button.Text = "Parar"
+        running = true
+    end
+end)
