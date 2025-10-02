@@ -1,0 +1,93 @@
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRoot = character:WaitForChild("HumanoidRootPart")
+
+local savedPosition = nil
+local noclipConnection
+
+-- Crear ScreenGui en CoreGui (ejecutores)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "EGZOLY_HUB"
+screenGui.Parent = game:GetService("CoreGui")
+
+-- Marco principal
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 250, 0, 300)
+mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 120)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+-- Hacer el hub draggable
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+-- Título
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 50)
+title.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
+title.Text = "🌟 EGZOLY 🌟"
+title.TextColor3 = Color3.fromRGB(255, 255, 0)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 22
+title.Parent = mainFrame
+
+-- Función para crear botones
+local function createButton(text, yPos, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -20, 0, 40)
+    button.Position = UDim2.new(0, 10, 0, yPos)
+    button.BackgroundColor3 = Color3.fromRGB(0, 200, 200)
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(0, 0, 0)
+    button.Font = Enum.Font.GothamBold
+    button.TextSize = 18
+    button.Parent = mainFrame
+
+    button.MouseButton1Click:Connect(callback)
+end
+
+-- STP: Guardar ubicación
+createButton("💾 STP (Guardar Posición)", 60, function()
+    savedPosition = humanoidRoot.Position
+    game.StarterGui:SetCore("SendNotification", {Title="EGZOLY", Text="Posición guardada ✅", Duration=2})
+end)
+
+-- TP: Teletransportarse a ubicación guardada
+createButton("⚡ TP (Teletransportar)", 110, function()
+    if savedPosition then
+        humanoidRoot.CFrame = CFrame.new(savedPosition)
+        game.StarterGui:SetCore("SendNotification", {Title="EGZOLY", Text="Teletransportado ⚡", Duration=2})
+    else
+        game.StarterGui:SetCore("SendNotification", {Title="EGZOLY", Text="No hay posición guardada ❌", Duration=2})
+    end
+end)
+
+-- ANC: Activar atravesar paredes
+createButton("🚀 ANC (Atravesar Paredes)", 160, function()
+    if not noclipConnection then
+        noclipConnection = game:GetService("RunService").Stepped:Connect(function()
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        end)
+        game.StarterGui:SetCore("SendNotification", {Title="EGZOLY", Text="Noclip activado 🚀", Duration=2})
+    end
+end)
+
+-- DNC: Desactivar atravesar paredes
+createButton("🛑 DNC (Desactivar Noclip)", 210, function()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+        game.StarterGui:SetCore("SendNotification", {Title="EGZOLY", Text="Noclip desactivado 🛑", Duration=2})
+    end
+end)
