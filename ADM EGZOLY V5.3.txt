@@ -1,0 +1,248 @@
+ loadstring([==[
+--== [⚡EGZOLY ADM V5.3⚡ Panel Mejorado Visual] ==--
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local Root = Character:WaitForChild("HumanoidRootPart")
+
+-- Variables
+local flying, noclip, infiniteJump, fling, dance, esp = false, false, false, false, false, false
+local BodyVelocity, DanceTrack
+local ESPTable = {}
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "EGZOLY_ADM_V53"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main Frame
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0,400,0,500)
+MainFrame.Position = UDim2.new(0.5,-200,0.5,-250)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25,25,30)
+MainFrame.ClipsDescendants = true
+MainFrame.Active = true
+MainFrame.Draggable = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,16)
+
+-- Gradient
+local Gradient = Instance.new("UIGradient", MainFrame)
+Gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, Color3.fromRGB(0,200,255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(0,120,255))}
+Gradient.Rotation = 45
+
+-- Title
+local TitleBar = Instance.new("Frame", MainFrame)
+TitleBar.Size = UDim2.new(1,0,0,50)
+TitleBar.BackgroundTransparency = 1
+
+local TitleLabel = Instance.new("TextLabel", TitleBar)
+TitleLabel.Size = UDim2.new(1,-50,1,0)
+TitleLabel.Position = UDim2.new(0,10,0,0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "⚡EGZOLY ADM V5.3⚡"
+TitleLabel.Font = Enum.Font.FredokaOne
+TitleLabel.TextScaled = true
+TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+
+-- Minimize Button
+local MinBtn = Instance.new("TextButton", TitleBar)
+MinBtn.Size = UDim2.new(0,40,0,30)
+MinBtn.Position = UDim2.new(1,-45,0.5,-15)
+MinBtn.BackgroundColor3 = Color3.fromRGB(0,180,255)
+MinBtn.TextColor3 = Color3.fromRGB(0,0,0)
+MinBtn.Text = "_"
+MinBtn.Font = Enum.Font.FredokaOne
+MinBtn.TextScaled = true
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0,6)
+
+local minimized = false
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    for _, child in pairs(MainFrame:GetChildren()) do
+        if child~=TitleBar then child.Visible = not minimized end
+    end
+end)
+
+-- Tabs Frame
+local TabFrame = Instance.new("Frame", MainFrame)
+TabFrame.Size = UDim2.new(0,80,1,-50)
+TabFrame.Position = UDim2.new(0,0,0,50)
+TabFrame.BackgroundTransparency = 1
+
+-- Section container
+local SectionContainer = Instance.new("Frame", MainFrame)
+SectionContainer.Size = UDim2.new(1,-80,1,-50)
+SectionContainer.Position = UDim2.new(0,80,0,50)
+SectionContainer.BackgroundTransparency = 1
+
+-- Section Creator
+local function createSection(options)
+    local Section = Instance.new("Frame", SectionContainer)
+    Section.Size = UDim2.new(1,0,1,0)
+    Section.BackgroundTransparency = 1
+    Section.Visible = false
+
+    for i,opt in ipairs(options) do
+        local Btn = Instance.new("TextButton", Section)
+        Btn.Size = UDim2.new(0.9,0,0,40)
+        Btn.Position = UDim2.new(0.05,0,0,(i-1)*50)
+        Btn.BackgroundColor3 = Color3.fromRGB(0,200,255)
+        Btn.TextColor3 = Color3.fromRGB(0,0,0)
+        Btn.Font = Enum.Font.FredokaOne
+        Btn.TextScaled = true
+        Btn.Text = opt.." [OFF]"
+        Instance.new("UICorner", Btn).CornerRadius = UDim.new(0,10)
+
+        local toggled=false
+        Btn.MouseButton1Click:Connect(function()
+            toggled = not toggled
+            Btn.Text = opt.." ["..(toggled and "ON" or "OFF").."]"
+            if opt=="FLY" then flying=toggled
+            elseif opt=="NOCLIP" then noclip=toggled
+            elseif opt=="INF-J" then infiniteJump=toggled
+            elseif opt=="FLING" then fling=toggled
+            elseif opt=="DANCE" then dance=toggled
+            elseif opt=="ESP" then esp=toggled
+            elseif opt=="XRAY" then warn("XRAY no implementado") end
+        end)
+    end
+    return Section
+end
+
+-- Crear secciones
+local PXSection = createSection({"FLY","NOCLIP","INF-J"})
+local TXSection = createSection({"FLING","DANCE"})
+local VXSection = createSection({"ESP","XRAY"})
+
+-- Tabs Creator
+local function createTab(name,parent,section)
+    local Btn = Instance.new("TextButton", parent)
+    Btn.Size = UDim2.new(1,0,0,50)
+    Btn.Position = UDim2.new(0,0,(#parent:GetChildren()-1)*50,0)
+    Btn.BackgroundColor3 = Color3.fromRGB(0,180,255)
+    Btn.Text = name
+    Btn.Font = Enum.Font.FredokaOne
+    Btn.TextColor3 = Color3.fromRGB(0,0,0)
+    Btn.TextScaled = true
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0,10)
+
+    Btn.MouseEnter:Connect(function() Btn.BackgroundColor3=Color3.fromRGB(0,220,255) end)
+    Btn.MouseLeave:Connect(function() Btn.BackgroundColor3=Color3.fromRGB(0,180,255) end)
+
+    Btn.MouseButton1Click:Connect(function()
+        for _, f in pairs(SectionContainer:GetChildren()) do f.Visible=false end
+        section.Visible = true
+    end)
+end
+
+-- Crear Tabs
+createTab("PX",TabFrame,PXSection)
+createTab("TX",TabFrame,TXSection)
+createTab("VX",TabFrame,VXSection)
+PXSection.Visible=true
+
+--== Funcionalidades ==--
+
+-- Fly
+RunService.RenderStepped:Connect(function()
+    if flying then
+        if not BodyVelocity then
+            BodyVelocity = Instance.new("BodyVelocity",Root)
+            BodyVelocity.MaxForce = Vector3.new(400000,400000,400000)
+        end
+        local dir=Vector3.new()
+        local cam=workspace.CurrentCamera.CFrame
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir+=cam.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir-=cam.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir-=cam.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir+=cam.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir+=Vector3.new(0,1,0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir-=Vector3.new(0,1,0) end
+        BodyVelocity.Velocity = dir*50
+    elseif BodyVelocity then BodyVelocity:Destroy(); BodyVelocity=nil end
+end)
+
+-- Noclip
+RunService.Stepped:Connect(function()
+    for _, part in pairs(Character:GetDescendants()) do
+        if part:IsA("BasePart") then part.CanCollide = not noclip end
+    end
+end)
+
+-- Infinite Jump
+UserInputService.JumpRequest:Connect(function()
+    if infiniteJump then Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+-- Fling
+RunService.RenderStepped:Connect(function()
+    if fling then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p~=LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (p.Character.HumanoidRootPart.Position - Root.Position).Magnitude
+                if dist<10 then
+                    p.Character.HumanoidRootPart.AssemblyLinearVelocity=Vector3.new(0,200,0)
+                end
+            end
+        end
+    end
+end)
+
+-- Dance
+local Animations={180435571,180435334,125750702}
+RunService.RenderStepped:Connect(function()
+    if dance then
+        if not DanceTrack then
+            local anim=Instance.new("Animation")
+            anim.AnimationId="rbxassetid://"..Animations[math.random(1,#Animations)]
+            DanceTrack=Humanoid:LoadAnimation(anim)
+            DanceTrack.Looped=true
+            DanceTrack:Play()
+        end
+    else
+        if DanceTrack then DanceTrack:Stop(); DanceTrack=nil end
+    end
+end)
+
+-- ESP
+local function createESP(player)
+    if ESPTable[player] then return end
+    if not player.Character or not player.Character:FindFirstChild("Head") then return end
+    local bb=Instance.new("BillboardGui")
+    bb.Adornee=player.Character.Head
+    bb.Size=UDim2.new(0,100,0,20)
+    bb.AlwaysOnTop=true
+    local label=Instance.new("TextLabel",bb)
+    label.Size=UDim2.new(1,0,1,0)
+    label.BackgroundTransparency=1
+    label.TextColor3=Color3.fromRGB(0,255,0)
+    label.TextScaled=true
+    label.Text=player.Name
+    bb.Parent=ScreenGui
+    ESPTable[player]=bb
+end
+
+local function removeESP(player)
+    if ESPTable[player] then ESPTable[player]:Destroy(); ESPTable[player]=nil end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function() if esp then createESP(plr) end end)
+end)
+Players.PlayerRemoving:Connect(function(plr) removeESP(plr) end)
+
+RunService.RenderStepped:Connect(function()
+    for _,p in pairs(Players:GetPlayers()) do
+        if p~=LocalPlayer then
+            if esp then createESP(p) else removeESP(p) end
+        end
+    end
+end)
+
+print("⚡EGZOLY ADM V5.3⚡ cargado correctamente!")
+]==])
