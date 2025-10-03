@@ -1,0 +1,242 @@
+ funciones
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "EGZOLYADM"
+gui.Parent = game.CoreGui
+
+-- Marco principal
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 420, 0, 320)
+mainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = gui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = mainFrame
+
+-- Título
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+title.Text = "⚡EGZOLY ADM⚡"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = title
+
+-- Minimizar
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.new(0, 40, 0, 40)
+minimize.Position = UDim2.new(1, -45, 0, 0)
+minimize.Text = "-"
+minimize.Font = Enum.Font.GothamBold
+minimize.TextSize = 24
+minimize.BackgroundColor3 = Color3.fromRGB(0,120,200)
+minimize.TextColor3 = Color3.fromRGB(255,255,255)
+minimize.Parent = mainFrame
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(0, 12)
+minCorner.Parent = minimize
+
+-- Scroll
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1, -10, 1, -50)
+scroll.Position = UDim2.new(0, 5, 0, 45)
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.CanvasSize = UDim2.new(0,0,0,800)
+scroll.ScrollBarThickness = 6
+scroll.Parent = mainFrame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0,10)
+layout.FillDirection = Enum.FillDirection.Horizontal
+layout.Parent = scroll
+
+-- Variables toggles
+local toggles = {
+    FLY = false,
+    NOCLIP = false,
+    INFJ = false,
+    FLING = false,
+    DANCE = false,
+    ESP = false,
+    XRAY = false
+}
+
+-- Funciones
+function toggleFly(state)
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    if state then
+        repeat task.wait()
+            local moveDir = humanoid.MoveDirection
+            hrp.Velocity = Vector3.new(moveDir.X*50, moveDir.Y*50 + (userinputservice:IsKeyDown(Enum.KeyCode.Space) and 50 or 0), moveDir.Z*50)
+        until not toggles.FLY
+        hrp.Velocity = Vector3.new(0,0,0)
+    end
+end
+
+function toggleNoclip(state)
+    if state then
+        noclipConn = game:GetService("RunService").Stepped:Connect(function()
+            for _,part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        end)
+    else
+        if noclipConn then noclipConn:Disconnect() end
+    end
+end
+
+function toggleInfJump(state)
+    if state then
+        infjumpConn = game:GetService("UserInputService").JumpRequest:Connect(function()
+            humanoid:ChangeState("Jumping")
+        end)
+    else
+        if infjumpConn then infjumpConn:Disconnect() end
+    end
+end
+
+function toggleFling(state)
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    if state then
+        flingConn = game:GetService("RunService").Heartbeat:Connect(function()
+            hrp.Velocity = Vector3.new(9999,9999,9999)
+        end)
+    else
+        if flingConn then flingConn:Disconnect() end
+        hrp.Velocity = Vector3.new(0,0,0)
+    end
+end
+
+function toggleDance(state)
+    if state then
+        local anim = Instance.new("Animation")
+        anim.AnimationId = "rbxassetid://3189773368" -- ejemplo dance
+        local track = humanoid:LoadAnimation(anim)
+        track:Play()
+        danceTrack = track
+    else
+        if danceTrack then danceTrack:Stop() end
+    end
+end
+
+function toggleESP(state)
+    if state then
+        for _,plr in pairs(game.Players:GetPlayers()) do
+            if plr ~= player and plr.Character then
+                for _,part in pairs(plr.Character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        local hl = Instance.new("BoxHandleAdornment")
+                        hl.Size = part.Size
+                        hl.Adornee = part
+                        hl.AlwaysOnTop = true
+                        hl.ZIndex = 10
+                        hl.Color3 = Color3.fromRGB(0,255,0)
+                        hl.Parent = part
+                    end
+                end
+            end
+        end
+    else
+        for _,plr in pairs(game.Players:GetPlayers()) do
+            if plr.Character then
+                for _,part in pairs(plr.Character:GetDescendants()) do
+                    if part:IsA("BoxHandleAdornment") then
+                        part:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end
+
+function toggleXray(state)
+    for _,obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            obj.LocalTransparencyModifier = state and 0.5 or 0
+        end
+    end
+end
+
+-- Crear sección
+local function createSection(name, buttons)
+    local sec = Instance.new("Frame")
+    sec.Size = UDim2.new(0,130,1,0)
+    sec.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    sec.Parent = scroll
+
+    local secCorner = Instance.new("UICorner")
+    secCorner.CornerRadius = UDim.new(0,10)
+    secCorner.Parent = sec
+
+    local secTitle = Instance.new("TextLabel")
+    secTitle.Size = UDim2.new(1,0,0,30)
+    secTitle.Text = name
+    secTitle.Font = Enum.Font.GothamBold
+    secTitle.TextColor3 = Color3.fromRGB(0,200,255)
+    secTitle.TextSize = 16
+    secTitle.Parent = sec
+
+    local list = Instance.new("UIListLayout")
+    list.Padding = UDim.new(0,5)
+    list.Parent = sec
+
+    for _,btnName in pairs(buttons) do
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(1,-10,0,30)
+        b.Text = btnName
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 14
+        b.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        b.TextColor3 = Color3.fromRGB(255,255,255)
+        b.Parent = sec
+
+        local bc = Instance.new("UICorner")
+        bc.CornerRadius = UDim.new(0,8)
+        bc.Parent = b
+
+        b.MouseButton1Click:Connect(function()
+            toggles[btnName:gsub("-",""):upper()] = not toggles[btnName:gsub("-",""):upper()]
+            local state = toggles[btnName:gsub("-",""):upper()]
+            b.BackgroundColor3 = state and Color3.fromRGB(0,200,100) or Color3.fromRGB(50,50,50)
+
+            if btnName == "FLY" then toggleFly(state) end
+            if btnName == "NOCLIP" then toggleNoclip(state) end
+            if btnName == "INF-J" then toggleInfJump(state) end
+            if btnName == "FLING" then toggleFling(state) end
+            if btnName == "DANCE" then toggleDance(state) end
+            if btnName == "ESP" then toggleESP(state) end
+            if btnName == "XRAY" then toggleXray(state) end
+        end)
+    end
+    return sec
+end
+
+-- Secciones
+createSection("PX", {"FLY", "NOCLIP", "INF-J"})
+createSection("TX", {"FLING", "DANCE"})
+createSection("VX", {"ESP", "XRAY"})
+
+-- Minimizar lógica
+local minimized = false
+minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    scroll.Visible = not minimized
+    minimize.Text = minimized and "+" or "-"
+end)
