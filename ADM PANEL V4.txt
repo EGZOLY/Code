@@ -1,0 +1,217 @@
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local Root = Character:WaitForChild("HumanoidRootPart")
+
+-- Variables de estado
+local flying, noclip, infiniteJump, fling, esp, xray, dance = false, false, false, false, false, false, false
+local minimized = false
+local BodyVelocity
+local DanceAnim
+local ESPTable = {}
+
+-- ScreenGui
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.Name = "EGZOLY_ADM"
+
+-- Main Frame
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 380, 0, 450)
+MainFrame.Position = UDim2.new(0.5, -190, 0.5, -225)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MainFrame.ClipsDescendants = true
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local Corner = Instance.new("UICorner", MainFrame)
+Corner.CornerRadius = UDim.new(0, 16)
+
+-- Gradient
+local Gradient = Instance.new("UIGradient", MainFrame)
+Gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 200, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 120, 255))
+}
+Gradient.Rotation = 45
+
+-- Title Bar
+local TitleBar = Instance.new("Frame", MainFrame)
+TitleBar.Size = UDim2.new(1,0,0,50)
+TitleBar.BackgroundTransparency = 1
+
+local TitleLabel = Instance.new("TextLabel", TitleBar)
+TitleLabel.Size = UDim2.new(1, -50, 1, 0)
+TitleLabel.Position = UDim2.new(0,10,0,0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "⚡EGZOLY ADM⚡"
+TitleLabel.Font = Enum.Font.FredokaOne
+TitleLabel.TextScaled = true
+TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+
+-- Minimize Button
+local MinBtn = Instance.new("TextButton", TitleBar)
+MinBtn.Size = UDim2.new(0,40,0,30)
+MinBtn.Position = UDim2.new(1, -45, 0.5, -15)
+MinBtn.BackgroundColor3 = Color3.fromRGB(0,180,255)
+MinBtn.TextColor3 = Color3.fromRGB(0,0,0)
+MinBtn.Text = "_"
+MinBtn.Font = Enum.Font.FredokaOne
+MinBtn.TextScaled = true
+local CornerBtn = Instance.new("UICorner", MinBtn)
+CornerBtn.CornerRadius = UDim.new(0,6)
+
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    for _, child in pairs(MainFrame:GetChildren()) do
+        if child ~= TitleBar then
+            child.Visible = not minimized
+        end
+    end
+end)
+
+-- Left Tabs
+local TabFrame = Instance.new("Frame", MainFrame)
+TabFrame.Size = UDim2.new(0, 60, 1, -50)
+TabFrame.Position = UDim2.new(0,0,0,50)
+TabFrame.BackgroundTransparency = 1
+
+-- Section Container
+local SectionContainer = Instance.new("Frame", MainFrame)
+SectionContainer.Size = UDim2.new(1, -60, 1, -50)
+SectionContainer.Position = UDim2.new(0, 60, 0, 50)
+SectionContainer.BackgroundTransparency = 1
+
+-- Crear Secciones
+local function createSection(options)
+    local Section = Instance.new("Frame", SectionContainer)
+    Section.Size = UDim2.new(1,0,1,0)
+    Section.BackgroundTransparency = 1
+    Section.Visible = false
+
+    for i,opt in ipairs(options) do
+        local Btn = Instance.new("TextButton", Section)
+        Btn.Size = UDim2.new(0.9,0,0,40)
+        Btn.Position = UDim2.new(0.05,0,0,(i-1)*45)
+        Btn.BackgroundColor3 = Color3.fromRGB(0,200,255)
+        Btn.TextColor3 = Color3.fromRGB(0,0,0)
+        Btn.Font = Enum.Font.FredokaOne
+        Btn.TextScaled = true
+        Btn.Text = opt.." [OFF]"
+
+        local Corner = Instance.new("UICorner", Btn)
+        Corner.CornerRadius = UDim.new(0,8)
+
+        local toggled = false
+        Btn.MouseButton1Click:Connect(function()
+            toggled = not toggled
+            Btn.Text = opt.." ["..(toggled and "ON" or "OFF").."]"
+            if opt == "FLY" then flying = toggled
+            elseif opt == "NOCLIP" then noclip = toggled
+            elseif opt == "INF-J" then infiniteJump = toggled
+            elseif opt == "FLING" then fling = toggled
+            elseif opt == "DANCE" then dance = toggled
+            elseif opt == "ESP" then esp = toggled
+            elseif opt == "XRAY" then xray = toggled
+            end
+        end)
+    end
+    return Section
+end
+
+local PXSection = createSection({"FLY","NOCLIP","INF-J"})
+local TXSection = createSection({"FLING","DANCE"})
+local VXSection = createSection({"ESP","XRAY"})
+
+-- Crear Tabs
+local function createTab(name,parent,section)
+    local Btn = Instance.new("TextButton", parent)
+    Btn.Size = UDim2.new(1,0,0,50)
+    Btn.Position = UDim2.new(0,0,(#parent:GetChildren()-1)*50,0)
+    Btn.BackgroundColor3 = Color3.fromRGB(0,180,255)
+    Btn.Text = name
+    Btn.Font = Enum.Font.FredokaOne
+    Btn.TextColor3 = Color3.fromRGB(0,0,0)
+    Btn.TextScaled = true
+
+    local Corner = Instance.new("UICorner", Btn)
+    Corner.CornerRadius = UDim.new(0,8)
+
+    Btn.MouseEnter:Connect(function() Btn.BackgroundColor3 = Color3.fromRGB(0,220,255) end)
+    Btn.MouseLeave:Connect(function() Btn.BackgroundColor3 = Color3.fromRGB(0,180,255) end)
+
+    Btn.MouseButton1Click:Connect(function()
+        for _, f in pairs(SectionContainer:GetChildren()) do f.Visible = false end
+        section.Visible = true
+    end)
+end
+
+createTab("PX", TabFrame, PXSection)
+createTab("TX", TabFrame, TXSection)
+createTab("VX", TabFrame, VXSection)
+
+-- Activar PX por defecto
+PXSection.Visible = true
+
+--== Funcionalidades==--
+
+-- Fly
+RunService.RenderStepped:Connect(function()
+    if flying then
+        if not BodyVelocity then
+            BodyVelocity = Instance.new("BodyVelocity", Root)
+            BodyVelocity.MaxForce = Vector3.new(400000,400000,400000)
+            BodyVelocity.Velocity = Vector3.new(0,0,0)
+        end
+        local dir = Vector3.new()
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + workspace.CurrentCamera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - workspace.CurrentCamera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - workspace.CurrentCamera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + workspace.CurrentCamera.CFrame.RightVector end
+        BodyVelocity.Velocity = dir * 50
+    elseif BodyVelocity then
+        BodyVelocity:Destroy()
+        BodyVelocity = nil
+    end
+end)
+
+-- Noclip
+RunService.Stepped:Connect(function()
+    if noclip then
+        for _, part in pairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
+        end
+    end
+end)
+
+-- Infinite Jump
+UserInputService.JumpRequest:Connect(function()
+    if infiniteJump then Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+-- Fling
+RunService.RenderStepped:Connect(function()
+    if fling then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (p.Character.HumanoidRootPart.Position - Root.Position).Magnitude
+                if dist < 10 then
+                    p.Character.HumanoidRootPart.Velocity = Vector3.new(0,100,0)
+                end
+            end
+        end
+    end
+end)
+
+-- Dance aleatorio
+local Animations = {180435571,180435334,125750702}
+RunService.RenderStepped:Connect(function()
+    if dance then
+        if not DanceAnim then
+            DanceAnim = Instance.new("Animation")
+            DanceAnim.AnimationId = "rbxassetid://"..Animations[math.random(1,#Animations)]
+            local Track = Humanoid:LoadAnimation(DanceAnim)
