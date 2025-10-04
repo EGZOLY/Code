@@ -1,0 +1,545 @@
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local function safeCharacter()
+	local c = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	return c
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "EGZOLY_ADM"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "Main"
+mainFrame.Size = UDim2.new(0, 420, 0, 320)
+mainFrame.Position = UDim2.new(0.02, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 15)
+mainFrame.BackgroundTransparency = 0
+mainFrame.BorderSizePixel = 0
+mainFrame.AnchorPoint = Vector2.new(0,0)
+mainFrame.Parent = ScreenGui
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.ClipsDescendants = true
+mainFrame.Visible = true
+mainFrame.Name = "EGZOLY_MAIN"
+
+local UICorner = Instance.new("UICorner", mainFrame)
+UICorner.CornerRadius = UDim.new(0, 12)
+
+local titleBar = Instance.new("Frame", mainFrame)
+titleBar.Name = "TitleBar"
+titleBar.Size = UDim2.new(1, 0, 0, 36)
+titleBar.Position = UDim2.new(0,0,0,0)
+titleBar.BackgroundTransparency = 1
+
+local titleLabel = Instance.new("TextLabel", titleBar)
+titleLabel.Size = UDim2.new(0.8, -10, 1, 0)
+titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 18
+titleLabel.Text = "⚡EGZOLY ADM⚡"
+titleLabel.TextColor3 = Color3.fromRGB(220, 245, 255)
+
+local minBtn = Instance.new("TextButton", titleBar)
+minBtn.Size = UDim2.new(0, 32, 0, 24)
+minBtn.Position = UDim2.new(1, -42, 0.5, -12)
+minBtn.BackgroundColor3 = Color3.fromRGB(18, 115, 255)
+minBtn.Text = "—"
+minBtn.TextColor3 = Color3.fromRGB(255,255,255)
+minBtn.Font = Enum.Font.Gotham
+minBtn.TextSize = 18
+minBtn.AutoButtonColor = true
+minBtn.Name = "Minimize"
+
+local closeBtn = Instance.new("TextButton", titleBar)
+closeBtn.Size = UDim2.new(0, 28, 0, 24)
+closeBtn.Position = UDim2.new(1, -84, 0.5, -12)
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 85, 95)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.Font = Enum.Font.Gotham
+closeBtn.TextSize = 14
+closeBtn.AutoButtonColor = true
+
+local content = Instance.new("Frame", mainFrame)
+content.Position = UDim2.new(0, 10, 0, 46)
+content.Size = UDim2.new(1, -20, 1, -56)
+content.BackgroundTransparency = 1
+
+local function makeSection(name, x)
+	local section = Instance.new("Frame", content)
+	section.Size = UDim2.new(0, 128, 1, 0)
+	section.Position = UDim2.new(0, x, 0, 0)
+	section.BackgroundColor3 = Color3.fromRGB(8, 12, 18)
+	section.BorderSizePixel = 0
+	local uic = Instance.new("UICorner", section)
+	uic.CornerRadius = UDim.new(0,10)
+	local title = Instance.new("TextLabel", section)
+	title.Size = UDim2.new(1, -10, 0, 28)
+	title.Position = UDim2.new(0, 6, 0, 6)
+	title.BackgroundTransparency = 1
+	title.Text = name
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = 14
+	title.TextColor3 = Color3.fromRGB(220,245,255)
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	return section
+end
+
+local sec1 = makeSection("PX", 0)
+local sec2 = makeSection("TX", 0.33)
+local sec3 = makeSection("VX", 0.66)
+
+local function makeToggle(parent, labelText, y)
+	local label = Instance.new("TextLabel", parent)
+	label.Size = UDim2.new(1, -12, 0, 20)
+	label.Position = UDim2.new(0, 6, 0, 40 + (y-1) * 46)
+	label.BackgroundTransparency = 1
+	label.Text = labelText
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 13
+	label.TextColor3 = Color3.fromRGB(210,210,210)
+	label.TextXAlignment = Enum.TextXAlignment.Left
+
+	local btn = Instance.new("TextButton", parent)
+	btn.Size = UDim2.new(0, 46, 0, 20)
+	btn.Position = UDim2.new(1, -56, 0, 40 + (y-1) * 46)
+	btn.Text = "OFF"
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 12
+	btn.AutoButtonColor = true
+	btn.BackgroundColor3 = Color3.fromRGB(30,30,34)
+	btn.TextColor3 = Color3.fromRGB(180,180,180)
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 8)
+	return btn
+end
+
+local flyBtn = makeToggle(sec1, "FLY", 1)
+local noclipBtn = makeToggle(sec1, "NOCLIP", 2)
+local infjBtn = makeToggle(sec1, "INF-J", 3)
+
+local flingBtn = makeToggle(sec2, "FLING", 1)
+local danceBtn = makeToggle(sec2, "DANCE", 2)
+
+local espBtn = makeToggle(sec3, "ESP", 1)
+local xrayBtn = makeToggle(sec3, "XRAY", 2)
+
+local function setBtnState(btn, on)
+	if on then
+		btn.Text = "ON"
+		btn.BackgroundColor3 = Color3.fromRGB(12, 200, 255)
+		btn.TextColor3 = Color3.new(0,0,0)
+	else
+		btn.Text = "OFF"
+		btn.BackgroundColor3 = Color3.fromRGB(30,30,34)
+		btn.TextColor3 = Color3.fromRGB(180,180,180)
+	end
+end
+
+setBtnState(flyBtn, false)
+setBtnState(noclipBtn, false)
+setBtnState(infjBtn, false)
+setBtnState(flingBtn, false)
+setBtnState(danceBtn, false)
+setBtnState(espBtn, false)
+setBtnState(xrayBtn, false)
+
+local minimized = false
+minBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	content.Visible = not minimized
+	titleLabel.Text = (minimized and "⚡EGZOLY ADM⚡ (min)" or "⚡EGZOLY ADM⚡")
+	mainFrame.Size = minimized and UDim2.new(0, 220, 0, 36) or UDim2.new(0, 420, 0, 320)
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+-- Features
+local flyEnabled = false
+local noclipEnabled = false
+local infJumpEnabled = false
+local flingEnabled = false
+local danceEnabled = false
+local espEnabled = false
+local xrayEnabled = false
+
+local flyBV, flyBG, flyConnection
+local noclipConn
+local flingSpinConn
+local danceParts = {}
+local espHighlights = {}
+local function createHighlightForChar(char)
+	local existing = char:FindFirstChild("EGZOLY_Highlight")
+	if existing and existing:IsA("Highlight") then return existing end
+	local h = Instance.new("Highlight")
+	h.Name = "EGZOLY_Highlight"
+	h.Parent = char
+	h.Adornee = char
+	h.OutlineTransparency = 0.5
+	h.FillTransparency = 1
+	h.Enabled = false
+	return h
+end
+
+local function updateESP(enabled)
+	if enabled then
+		for _,p in pairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer then
+				local ch = p.Character
+				if ch then
+					local h = createHighlightForChar(ch)
+					h.Enabled = true
+					h.OutlineColor = Color3.fromRGB(0, 255, 170)
+					espHighlights[p] = h
+				end
+			end
+		end
+	else
+		for _,h in pairs(espHighlights) do
+			if h and h.Parent then pcall(function() h:Destroy() end) end
+		end
+		espHighlights = {}
+	end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+	plr.CharacterAdded:Connect(function(ch)
+		if espEnabled then
+			local h = createHighlightForChar(ch)
+			h.Enabled = true
+			h.OutlineColor = Color3.fromRGB(0, 255, 170)
+			espHighlights[plr] = h
+		end
+		if xrayEnabled then
+			local h = createHighlightForChar(ch)
+			h.Enabled = true
+			h.FillTransparency = 0.7
+			h.OutlineTransparency = 0
+			h.OutlineColor = Color3.fromRGB(0,200,255)
+			h.Parent = ch
+			h.Adornee = ch
+		end
+	end)
+end)
+
+Players.PlayerRemoving:Connect(function(plr)
+	if espHighlights[plr] then
+		pcall(function() espHighlights[plr]:Destroy() end)
+		espHighlights[plr] = nil
+	end
+end)
+
+local function enableFly()
+	if flyEnabled then return end
+	flyEnabled = true
+	setBtnState(flyBtn, true)
+	local char = safeCharacter()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	flyBV = Instance.new("BodyVelocity")
+	flyBV.Name = "EGZ_FlyBV"
+	flyBV.MaxForce = Vector3.new(1e5,1e5,1e5)
+	flyBV.Velocity = Vector3.new(0,0,0)
+	flyBV.Parent = hrp
+	flyBG = Instance.new("BodyGyro")
+	flyBG.Name = "EGZ_FlyBG"
+	flyBG.MaxTorque = Vector3.new(1e5,1e5,1e5)
+	flyBG.CFrame = hrp.CFrame
+	flyBG.Parent = hrp
+	local speed = 80
+	local upDown = 0
+	local forward, right = 0, 0
+	local function onInput(input, gpe)
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+			local key = input.KeyCode
+			if key == Enum.KeyCode.W then forward = 1 end
+			if key == Enum.KeyCode.S then forward = -1 end
+			if key == Enum.KeyCode.A then right = -1 end
+			if key == Enum.KeyCode.D then right = 1 end
+			if key == Enum.KeyCode.Space then upDown = 1 end
+			if key == Enum.KeyCode.LeftControl or key == Enum.KeyCode.LeftShift then upDown = -1 end
+		end
+	end
+	local function onInputEnd(input)
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+			local key = input.KeyCode
+			if key == Enum.KeyCode.W or key == Enum.KeyCode.S then forward = 0 end
+			if key == Enum.KeyCode.A or key == Enum.KeyCode.D then right = 0 end
+			if key == Enum.KeyCode.Space or key == Enum.KeyCode.LeftControl or key == Enum.KeyCode.LeftShift then upDown = 0 end
+		end
+	end
+	UserInputService.InputBegan:Connect(onInput)
+	UserInputService.InputEnded:Connect(onInputEnd)
+	flyConnection = RunService.Heartbeat:Connect(function(delta)
+		if not flyEnabled then return end
+		if not hrp or not hrp.Parent then
+			enableFly()
+			return
+		end
+		local cam = workspace.CurrentCamera
+		local forwardVec = cam.CFrame.LookVector * forward
+		local rightVec = cam.CFrame.RightVector * right
+		local total = (forwardVec + rightVec)
+		local yVel = upDown * speed
+		local vel = total.Unit * speed
+		if total.Magnitude == 0 then vel = Vector3.new(0,0,0) end
+		flyBG.CFrame = cam.CFrame
+		flyBV.Velocity = Vector3.new(vel.X, yVel, vel.Z)
+		if humanoid then
+			pcall(function() humanoid.PlatformStand = true end)
+		end
+	end)
+end
+
+local function disableFly()
+	if not flyEnabled then return end
+	flyEnabled = false
+	setBtnState(flyBtn, false)
+	if flyConnection then flyConnection:Disconnect() flyConnection = nil end
+	local char = safeCharacter()
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		for _,v in pairs(hrp:GetChildren()) do
+			if v.Name == "EGZ_FlyBV" or v.Name == "EGZ_FlyBG" then pcall(function() v:Destroy() end) end
+		end
+	end
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if humanoid then pcall(function() humanoid.PlatformStand = false end) end
+end
+
+local function enableNoclip()
+	if noclipEnabled then return end
+	noclipEnabled = true
+	setBtnState(noclipBtn, true)
+	noclipConn = RunService.Stepped:Connect(function()
+		local char = LocalPlayer.Character
+		if char then
+			for _,part in pairs(char:GetDescendants()) do
+				if part:IsA("BasePart") and part.CanCollide == true then
+					part.CanCollide = false
+				end
+			end
+		end
+	end)
+end
+
+local function disableNoclip()
+	if not noclipEnabled then return end
+	noclipEnabled = false
+	setBtnState(noclipBtn, false)
+	if noclipConn then noclipConn:Disconnect() noclipConn = nil end
+end
+
+local function enableInfJump()
+	if infJumpEnabled then return end
+	infJumpEnabled = true
+	setBtnState(infjBtn, true)
+	UserInputService.JumpRequest:Connect(function()
+		if not infJumpEnabled then return end
+		local humanoid = safeCharacter():FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health > 0 then
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end)
+end
+
+local function disableInfJump()
+	infJumpEnabled = false
+	setBtnState(infjBtn, false)
+end
+
+local flingTouchedConns = {}
+local function enableFling()
+	if flingEnabled then return end
+	flingEnabled = true
+	setBtnState(flingBtn, true)
+	local char = safeCharacter()
+	local hrp = char:WaitForChild("HumanoidRootPart")
+	local spin = Instance.new("BodyAngularVelocity")
+	spin.Name = "EGZ_FlingSpin"
+	spin.MaxTorque = Vector3.new(1e8,1e8,1e8)
+	spin.AngularVelocity = Vector3.new(0,40,0)
+	spin.Parent = hrp
+	local function onTouch(part)
+		if not flingEnabled then return end
+		local otherChar = part:FindFirstAncestorOfClass("Model")
+		if otherChar and otherChar ~= char and otherChar:FindFirstChildOfClass("Humanoid") then
+			local otherHRP = otherChar:FindFirstChild("HumanoidRootPart") or otherChar:FindFirstChildWhichIsA("BasePart")
+			if otherHRP then
+				pcall(function()
+					otherHRP.Velocity = (otherHRP.Position - hrp.Position).Unit * 120 + Vector3.new(0, 80, 0)
+				end)
+			end
+		end
+	end
+	for _,p in pairs(char:GetDescendants()) do
+		if p:IsA("BasePart") then
+			local conn = p.Touched:Connect(onTouch)
+			table.insert(flingTouchedConns, conn)
+		end
+	end
+	flingSpinConn = char.DescendantAdded:Connect(function(d)
+		if d:IsA("BasePart") then
+			local conn = d.Touched:Connect(onTouch)
+			table.insert(flingTouchedConns, conn)
+		end
+	end)
+end
+
+local function disableFling()
+	if not flingEnabled then return end
+	flingEnabled = false
+	setBtnState(flingBtn, false)
+	local char = safeCharacter()
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if hrp and hrp:FindFirstChild("EGZ_FlingSpin") then pcall(function() hrp:FindFirstChild("EGZ_FlingSpin"):Destroy() end) end
+	for _,c in pairs(flingTouchedConns) do
+		pcall(function() c:Disconnect() end)
+	end
+	flingTouchedConns = {}
+	if flingSpinConn then flingSpinConn:Disconnect() flingSpinConn = nil end
+end
+
+local function enableDance()
+	if danceEnabled then return end
+	danceEnabled = true
+	setBtnState(danceBtn, true)
+	local char = safeCharacter()
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	for _,v in pairs(char:GetDescendants()) do
+		if v:IsA("BasePart") then
+			local bv = Instance.new("BodyVelocity")
+			bv.MaxForce = Vector3.new(1e4,1e4,1e4)
+			bv.Velocity = Vector3.new(0, 6 * math.sin(tick()*4), 0)
+			bv.Name = "EGZ_DanceBV"
+			bv.Parent = v
+			table.insert(danceParts, bv)
+		end
+	end
+	RunService.Heartbeat:Connect(function()
+		if not danceEnabled then return end
+		for _,bv in pairs(danceParts) do
+			if bv.Parent then
+				bv.Velocity = Vector3.new(0, 6 * math.sin(tick()*4), 0)
+			end
+		end
+	end)
+end
+
+local function disableDance()
+	if not danceEnabled then return end
+	danceEnabled = false
+	setBtnState(danceBtn, false)
+	for _,bv in pairs(danceParts) do
+		pcall(function() bv:Destroy() end)
+	end
+	danceParts = {}
+end
+
+local function enableESP()
+	if espEnabled then return end
+	espEnabled = true
+	setBtnState(espBtn, true)
+	updateESP(true)
+end
+
+local function disableESP()
+	if not espEnabled then return end
+	espEnabled = false
+	setBtnState(espBtn, false)
+	updateESP(false)
+end
+
+local function enableXRay()
+	if xrayEnabled then return end
+	xrayEnabled = true
+	setBtnState(xrayBtn, true)
+	for _,p in pairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer and p.Character then
+			local h = createHighlightForChar(p.Character)
+			h.Enabled = true
+			h.FillTransparency = 0.75
+			h.OutlineTransparency = 0
+			h.OutlineColor = Color3.fromRGB(0,180,255)
+			h.Parent = p.Character
+			h.Adornee = p.Character
+			espHighlights[p] = h
+		end
+	end
+end
+
+local function disableXRay()
+	if not xrayEnabled then return end
+	xrayEnabled = false
+	setBtnState(xrayBtn, false)
+	for plr,h in pairs(espHighlights) do
+		if h then
+			pcall(function() h:Destroy() end)
+		end
+	end
+	espHighlights = {}
+end
+
+flyBtn.MouseButton1Click:Connect(function()
+	if flyEnabled then disableFly() else enableFly() end
+end)
+noclipBtn.MouseButton1Click:Connect(function()
+	if noclipEnabled then disableNoclip() else enableNoclip() end
+end)
+infjBtn.MouseButton1Click:Connect(function()
+	if infJumpEnabled then disableInfJump() else enableInfJump() end
+end)
+flingBtn.MouseButton1Click:Connect(function()
+	if flingEnabled then disableFling() else enableFling() end
+end)
+danceBtn.MouseButton1Click:Connect(function()
+	if danceEnabled then disableDance() else enableDance() end
+end)
+espBtn.MouseButton1Click:Connect(function()
+	if espEnabled then disableESP() else enableESP() end
+end)
+xrayBtn.MouseButton1Click:Connect(function()
+	if xrayEnabled then disableXRay() else enableXRay() end
+end)
+
+-- Keep UI responsive on respawn
+LocalPlayer.CharacterAdded:Connect(function(char)
+	wait(0.5)
+	if flyEnabled then
+		disableFly()
+		enableFly()
+	end
+	if flingEnabled then
+		disableFling()
+		enableFling()
+	end
+	if danceEnabled then
+		disableDance()
+		enableDance()
+	end
+end)
+
+-- Aesthetic: glow border
+local border = Instance.new("Frame", mainFrame)
+border.Size = UDim2.new(1,4,1,4)
+border.Position = UDim2.new(0,-2,0,-2)
+border.ZIndex = 0
+border.BackgroundTransparency = 1
+local outline = Instance.new("UIStroke", mainFrame)
+outline.Color = Color3.fromRGB(30,200,255)
+outline.Thickness = 2
+outline.Transparency = 0.35
+
+-- Finished
