@@ -1,0 +1,244 @@
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local Camera = workspace.CurrentCamera
+
+-- Variables de estado
+local flyEnabled = false
+local noclipEnabled = false
+local infJumpEnabled = false
+local flingEnabled = false
+local danceEnabled = false
+local espEnabled = false
+local xrayEnabled = false
+
+-- Función de crear UI
+local function createUI()
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "EGZOLY_ADM_V5_5"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    -- Ventana principal
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 450, 0, 300)
+    MainFrame.Position = UDim2.new(0.3,0,0.3,0)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+
+    -- Título
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(1,0,0,40)
+    Title.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    Title.BorderSizePixel = 0
+    Title.Text = "⚡EGZOLY ADM V5.5⚡"
+    Title.TextColor3 = Color3.new(1,1,1)
+    Title.TextScaled = true
+    Title.Parent = MainFrame
+
+    -- Contenedor de secciones
+    local SectionsFrame = Instance.new("Frame")
+    SectionsFrame.Name = "SectionsFrame"
+    SectionsFrame.Size = UDim2.new(1,0,1,-40)
+    SectionsFrame.Position = UDim2.new(0,0,0,40)
+    SectionsFrame.BackgroundTransparency = 1
+    SectionsFrame.Parent = MainFrame
+
+    local function createSection(name, x, options)
+        local section = Instance.new("Frame")
+        section.Name = name
+        section.Size = UDim2.new(0,140,1,0)
+        section.Position = UDim2.new(0,x,0,0)
+        section.BackgroundColor3 = Color3.fromRGB(25,25,35)
+        section.BorderSizePixel = 0
+        section.Parent = SectionsFrame
+
+        local UICorner = Instance.new("UICorner")
+        UICorner.CornerRadius = UDim.new(0,10)
+        UICorner.Parent = section
+
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(1,0,0,30)
+        Label.BackgroundTransparency = 1
+        Label.Text = name
+        Label.TextColor3 = Color3.fromRGB(0,170,255)
+        Label.TextScaled = true
+        Label.Parent = section
+
+        local yPos = 40
+        for _, option in pairs(options) do
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1,-10,0,30)
+            btn.Position = UDim2.new(0,5,0,yPos)
+            btn.Text = option.name
+            btn.TextColor3 = Color3.new(1,1,1)
+            btn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+            btn.Parent = section
+
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0,8)
+            corner.Parent = btn
+
+            btn.MouseButton1Click:Connect(option.callback)
+            yPos = yPos + 40
+        end
+    end
+
+    -- Funciones de toggles
+    local function toggleFly()
+        flyEnabled = not flyEnabled
+        if flyEnabled then
+            local BodyGyro = Instance.new("BodyGyro")
+            BodyGyro.Name = "FlyGyro"
+            BodyGyro.MaxTorque = Vector3.new(400000,400000,400000)
+            BodyGyro.P = 1250
+            BodyGyro.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+            BodyGyro.Parent = LocalPlayer.Character.HumanoidRootPart
+
+            local BodyVelocity = Instance.new("BodyVelocity")
+            BodyVelocity.Name = "FlyVelocity"
+            BodyVelocity.MaxForce = Vector3.new(400000,400000,400000)
+            BodyVelocity.Velocity = Vector3.new(0,0,0)
+            BodyVelocity.Parent = LocalPlayer.Character.HumanoidRootPart
+
+            spawn(function()
+                while flyEnabled and RunService.RenderStepped:Wait() do
+                    local vel = Vector3.new(0,0,0)
+                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then vel = vel + workspace.CurrentCamera.CFrame.LookVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then vel = vel - workspace.CurrentCamera.CFrame.LookVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then vel = vel - workspace.CurrentCamera.CFrame.RightVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then vel = vel + workspace.CurrentCamera.CFrame.RightVector end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then vel = vel + Vector3.new(0,1,0) end
+                    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then vel = vel - Vector3.new(0,1,0) end
+                    BodyVelocity.Velocity = vel*50
+                    BodyGyro.CFrame = CFrame.new(LocalPlayer.Character.HumanoidRootPart.Position, LocalPlayer.Character.HumanoidRootPart.Position + workspace.CurrentCamera.CFrame.LookVector)
+                end
+                BodyGyro:Destroy()
+                BodyVelocity:Destroy()
+            end)
+        end
+    end
+
+    local function toggleNoclip()
+        noclipEnabled = not noclipEnabled
+    end
+
+    local function toggleInfJump()
+        infJumpEnabled = not infJumpEnabled
+    end
+
+    local function toggleFling()
+        flingEnabled = not flingEnabled
+        if flingEnabled then
+            spawn(function()
+                while flingEnabled do
+                    for i,player in pairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local hrp = player.Character.HumanoidRootPart
+                            hrp.Velocity = (hrp.Position - LocalPlayer.Character.HumanoidRootPart.Position).unit*100
+                        end
+                    end
+                    wait(0.1)
+                end
+            end)
+        end
+    end
+
+    local function toggleDance()
+        danceEnabled = not danceEnabled
+        if danceEnabled then
+            local anim = Instance.new("Animation")
+            anim.AnimationId = "rbxassetid://507771019" -- Animación de baile genérica
+            local track = LocalPlayer.Character.Humanoid:LoadAnimation(anim)
+            track:Play()
+        else
+            LocalPlayer.Character.Humanoid:LoadAnimation(Instance.new("Animation")):Stop()
+        end
+    end
+
+    local function toggleESP()
+        espEnabled = not espEnabled
+    end
+
+    local function toggleXray()
+        xrayEnabled = not xrayEnabled
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then
+                obj.Transparency = xrayEnabled and 0.5 or 0
+            end
+        end
+    end
+
+    -- Secciones
+    createSection("PX",0,{
+        {name="FLY", callback=toggleFly},
+        {name="NOCLIP", callback=toggleNoclip},
+        {name="INF-J", callback=toggleInfJump},
+    })
+
+    createSection("TX",150,{
+        {name="FLING", callback=toggleFling},
+        {name="DANCE", callback=toggleDance},
+    })
+
+    createSection("VX",300,{
+        {name="ESP", callback=toggleESP},
+        {name="XRAY", callback=toggleXray},
+    })
+
+    -- Funcionalidad noclip
+    RunService.Stepped:Connect(function()
+        if noclipEnabled and LocalPlayer.Character then
+            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+
+    -- Funcionalidad salto infinito
+    LocalPlayer.Character.Humanoid.Jumping:Connect(function()
+        if infJumpEnabled then
+            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end)
+
+    -- Func ESP
+    RunService.RenderStepped:Connect(function()
+        if espEnabled then
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    if not player.Character:FindFirstChild("EGZOLY_ESP_Box") then
+                        local box = Instance.new("BoxHandleAdornment")
+                        box.Name = "EGZOLY_ESP_Box"
+                        box.Adornee = player.Character.HumanoidRootPart
+                        box.Color3 = Color3.fromRGB(0,170,255)
+                        box.Transparency = 0.5
+                        box.Size = Vector3.new(4,6,2)
+                        box.AlwaysOnTop = true
+                        box.Parent = LocalPlayer.PlayerGui
+                    end
+                end
+            end
+        else
+            for _, box in pairs(LocalPlayer.PlayerGui:GetChildren()) do
+                if box.Name == "EGZOLY_ESP_Box" then
+                    box:Destroy()
+                end
+            end
+        end
+    end)
+end
+
+-- Crear UI al ejecutar script
+createUI()
