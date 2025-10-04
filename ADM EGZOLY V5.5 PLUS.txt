@@ -1,0 +1,213 @@
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "EGZOLY_ADM_V5_5"
+ScreenGui.Parent = game.CoreGui
+
+local cyan = Color3.fromRGB(0, 255, 255)
+local bgColor = Color3.fromRGB(30, 30, 30)
+local buttonColor = Color3.fromRGB(50, 50, 50)
+
+local function createRoundFrame(parent, size, position)
+    local frame = Instance.new("Frame")
+    frame.Size = size
+    frame.Position = position
+    frame.BackgroundColor3 = bgColor
+    frame.BorderSizePixel = 0
+    frame.Parent = parent
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(0, 10)
+    uiCorner.Parent = frame
+    return frame
+end
+
+local mainFrame = createRoundFrame(ScreenGui, UDim2.new(0, 420, 0, 300), UDim2.new(0.3, 0, 0.3, 0))
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "⚡EGZOLY ADM V5.5⚡"
+title.TextColor3 = cyan
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.Parent = mainFrame
+
+local minBtn = Instance.new("TextButton")
+minBtn.Size = UDim2.new(0, 50, 0, 30)
+minBtn.Position = UDim2.new(1, -50, 0, 0)
+minBtn.BackgroundColor3 = buttonColor
+minBtn.Text = "-"
+minBtn.TextColor3 = cyan
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextSize = 18
+minBtn.Parent = mainFrame
+
+minBtn.MouseButton1Click:Connect(function()
+    for _, v in pairs(mainFrame:GetChildren()) do
+        if v ~= title and v ~= minBtn then
+            v.Visible = not v.Visible
+        end
+    end
+end)
+
+local function createSection(name, position)
+    local section = createRoundFrame(mainFrame, UDim2.new(0, 130, 0, 250), position)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 30)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = cyan
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 16
+    label.Parent = section
+    return section
+end
+
+local PX = createSection("PX", UDim2.new(0, 10, 0, 40))
+local TX = createSection("TX", UDim2.new(0, 150, 0, 40))
+local VX = createSection("VX", UDim2.new(0, 290, 0, 40))
+
+local function createButton(parent, name, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -10, 0, 40)
+    btn.Position = UDim2.new(0, 5, 0, (#parent:GetChildren()-1)*45 + 35)
+    btn.BackgroundColor3 = buttonColor
+    btn.Text = name
+    btn.TextColor3 = cyan
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Parent = parent
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(0, 8)
+    uiCorner.Parent = btn
+    local enabled = false
+    btn.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        if enabled then
+            btn.BackgroundColor3 = cyan
+            btn.TextColor3 = Color3.new(0,0,0)
+        else
+            btn.BackgroundColor3 = buttonColor
+            btn.TextColor3 = cyan
+        end
+        callback(enabled)
+    end)
+end
+
+createButton(PX, "FLY", function(enabled)
+    if enabled then
+        local bodyGyro = Instance.new("BodyGyro")
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyGyro.Parent = LocalPlayer.Character.HumanoidRootPart
+        bodyVelocity.Parent = LocalPlayer.Character.HumanoidRootPart
+        bodyGyro.MaxTorque = Vector3.new(400000,400000,400000)
+        bodyVelocity.MaxForce = Vector3.new(400000,400000,400000)
+        RunService:BindToRenderStep("Fly", Enum.RenderPriority.Character.Value, function()
+            local cam = workspace.CurrentCamera
+            local move = Vector3.new()
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cam.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cam.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cam.CFrame.RightVector end
+            bodyVelocity.Velocity = move * 50
+        end)
+    else
+        RunService:UnbindFromRenderStep("Fly")
+        for _,v in pairs({"BodyGyro","BodyVelocity"}) do
+            local obj = LocalPlayer.Character.HumanoidRootPart:FindFirstChild(v)
+            if obj then obj:Destroy() end
+        end
+    end
+end)
+
+createButton(PX, "NOCLIP", function(enabled)
+    local connection
+    connection = RunService.Stepped:Connect(function()
+        if enabled then
+            for _, part in pairs(LocalPlayer.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        else
+            for _, part in pairs(LocalPlayer.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+            if connection then connection:Disconnect() end
+        end
+    end)
+end)
+
+createButton(PX, "INF-J", function(enabled)
+    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        if enabled then
+            humanoid:GetPropertyChangedSignal("JumpPower"):Connect(function()
+                humanoid.JumpPower = 100
+            end)
+            humanoid.JumpPower = 100
+        else
+            humanoid.JumpPower = 50
+        end
+    end
+end)
+
+createButton(TX, "FLING", function(enabled)
+    if enabled then
+        local bav = Instance.new("BodyAngularVelocity")
+        bav.Parent = LocalPlayer.Character.HumanoidRootPart
+        bav.MaxTorque = Vector3.new(0, math.huge, 0)
+        bav.AngularVelocity = Vector3.new(0,50,0)
+    else
+        local bav = LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyAngularVelocity")
+        if bav then bav:Destroy() end
+    end
+end)
+
+createButton(TX, "DANCE", function(enabled)
+    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        local anim = Instance.new("Animation")
+        anim.AnimationId = "rbxassetid://180435571"
+        local track = humanoid:LoadAnimation(anim)
+        if enabled then track:Play() else track:Stop() end
+    end
+end)
+
+createButton(VX, "ESP", function(enabled)
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local box = Instance.new("BoxHandleAdornment")
+            box.Adornee = player.Character:FindFirstChild("HumanoidRootPart")
+            box.Size = Vector3.new(2,5,1)
+            box.Color3 = Color3.new(1,0,0)
+            box.AlwaysOnTop = true
+            box.ZIndex = 10
+            box.Parent = workspace
+            if not enabled then box:Destroy() end
+        end
+    end
+end)
+
+createButton(VX, "XRAY", function(enabled)
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") then
+            if enabled then
+                part.LocalTransparencyModifier = 0.5
+            else
+                part.LocalTransparencyModifier = 0
+            end
+        end
+    end
+end)
