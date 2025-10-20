@@ -1,0 +1,50 @@
+loadstring([==[ --== ⚡EGZOLY HUB⚡ - Infinite Jump con Bomba Bogie ==--
+
+local Players = game:GetService("Players") local LocalPlayer = Players.LocalPlayer local Mouse = LocalPlayer:GetMouse() local RunService = game:GetService("RunService")
+
+--== Crear UI ==-- local ScreenGui = Instance.new("ScreenGui") ScreenGui.Name = "EGZOLYHub" ScreenGui.Parent = game:GetService("CoreGui")
+
+local MainFrame = Instance.new("Frame") MainFrame.Size = UDim2.new(0, 250, 0, 150) MainFrame.Position = UDim2.new(0.4,0,0.4,0) MainFrame.BackgroundColor3 = Color3.fromRGB(0, 200, 255) MainFrame.BorderSizePixel = 0 MainFrame.Parent = ScreenGui MainFrame.Active = true MainFrame.Draggable = true
+
+local Title = Instance.new("TextLabel") Title.Size = UDim2.new(1,0,0,30) Title.BackgroundTransparency = 1 Title.Text = "⚡EGZOLY HUB⚡" Title.TextColor3 = Color3.fromRGB(255,255,255) Title.Font = Enum.Font.GothamBold Title.TextSize = 20 Title.Parent = MainFrame
+
+local Button = Instance.new("TextButton") Button.Size = UDim2.new(0.8,0,0,50) Button.Position = UDim2.new(0.1,0,0.5,0) Button.BackgroundColor3 = Color3.fromRGB(255, 100, 100) Button.TextColor3 = Color3.fromRGB(255,255,255) Button.Font = Enum.Font.GothamBold Button.TextSize = 18 Button.Text = "Infinite Jump" Button.Parent = MainFrame
+
+--== Función Infinite Jump con Bomba Bogie ==-- Button.MouseButton1Click:Connect(function() local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() local root = character:WaitForChild("HumanoidRootPart") local humanoid = character:WaitForChild("Humanoid")
+
+-- Crear la Bomba Bogie debajo del jugador
+local bomba = Instance.new("Part")
+bomba.Size = Vector3.new(5,1,5)
+bomba.Position = root.Position - Vector3.new(0,3,0)
+bomba.Anchored = true
+bomba.CanCollide = true
+bomba.BrickColor = BrickColor.new("Bright red")
+bomba.Name = "BombaBogieHub"
+bomba.Parent = workspace
+
+-- Reducir gravedad (60% de la normal)
+local gravityOriginal = workspace.Gravity
+workspace.Gravity = gravityOriginal * 0.6
+
+-- Infinite Jump while bomba exists
+local jumpConnection
+jumpConnection = UserInputService.JumpRequest:Connect(function()
+    if bomba and bomba.Parent then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- Monitor bomba
+spawn(function()
+    while bomba.Parent do
+        RunService.Stepped:Wait()
+    end
+    -- Restaurar gravedad y desconectar salto infinito
+    workspace.Gravity = gravityOriginal
+    jumpConnection:Disconnect()
+end)
+
+end)
+
+]==])()
+
